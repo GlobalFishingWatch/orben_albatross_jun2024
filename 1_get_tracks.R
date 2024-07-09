@@ -29,7 +29,8 @@ dates <- bq_table_download(dates_q)
 dates <- dates %>% arrange(ssvid, date)
 
 count(distinct(dates, date)) #302
-
+count(distinct(track_proj, date))
+count(distinct(encounters, date))
 DATES <- unique(dates$date)
 DATES <- sort(DATES)
 head(DATES)
@@ -66,12 +67,12 @@ messages AS (
     speed_knots,
     heading,
     course,
-    nnet_score
+    nnet_score,
     DATE(timestamp) AS date
   FROM
   `pipe_ais_v3_published.messages`
-  WHERE DATE(timestamp) = DATE(today())) AND
-  clean_segs = TRUE,
+  WHERE DATE(timestamp) = DATE(today()) AND
+  clean_segs),
 
 messages_daily AS(
   SELECT *
