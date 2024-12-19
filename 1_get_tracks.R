@@ -7,7 +7,7 @@ project_id <- "world-fishing-827"
 dataset <- 'scratch_andrea_ttl100'
 
 
-# david combining dates 3 dates per ssvid
+# david was combining dates 3 dates per ssvid: the day before, the day of the encounter and the day after
 dates_query <- "
 SELECT DISTINCT ssvid, date 
 FROM (
@@ -23,7 +23,7 @@ SELECT ssvid,
 DATE_SUB(date, interval 1 day) 
 FROM `scratch_david.bird_encounters`)
 "
-
+#we have a single vector of 302 dates
 dates_q <- bq_project_query(project_id, dates_query)
 dates <- bq_table_download(dates_q)
 dates <- dates %>% arrange(ssvid, date)
@@ -38,8 +38,9 @@ head(DATES)
 dates %>%
   count(ssvid) %>%
   arrange(desc(n))
-# query for one day
 
+# query for one day
+#notice the {.x} to loop later
 query_tracks <- "
 CREATE TEMP FUNCTION today() AS (timestamp('{.x}'));
 WITH
@@ -85,11 +86,11 @@ SELECT *
   FROM messages_daily
 ORDER BY ssvid, date, timestamp
 "
-
+# we loop through dates 
 create_table <-  function(.x) {
   # create the query
   query <- glue::glue(query_tracks)
-  # name the table
+  # name the table to create a partitioned table by date
   table_name <- paste0(project_id, ".", dataset, ".orben_tracks_results$",format.Date(.x, "%Y%m%d"))
   # do the query
   bq_project_query(project_id,
@@ -108,12 +109,13 @@ library(furrr)
 parallel::detectCores()
 plan(multisession, workers = parallel::detectCores() - 2)
 furrr::future_map(DATES, ~create_table(.x))
-plan("sequential")
+plan(sequential)
 
-# download
+# download the large table. this has all positions but is not organized by **Encounter**
 orben_tracks <- bq_table_download(paste(project_id, dataset, "orben_tracks_results", sep = "."))
 readr::write_csv(orben_tracks, "orben_results.csv")
-
+orben_tracks  <- readr::read_csv("orben_results.csv")
+#8238304 lines
 count(orben_tracks, ssvid)
 count(orben_tracks, date)
 

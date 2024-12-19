@@ -1,22 +1,30 @@
 library(vroom)
 library(dplyr)
+# all positions
 vessel_pos <- vroom("orben_results.csv")
+
+#encounter info
 #encounters <- vroom("results/encounter_info.csv") 
 encounters <- encounters %>% mutate(bird_id = paste(species, BirdID, sep = "_"))
+#original tracks
 bird_pos <- vroom("data/Orben_tracks_April5_2024.csv", col_select = -1) %>% 
   mutate(date = lubridate::date(datetime)) %>% 
   mutate(bird_id = paste(species, BirdID, sep = "_"))
 
-
+# join
 bird_encounter <- encounters %>% 
   right_join(bird_pos, relationship = "many-to-many") 
+#I was going to split per encounter
 f = bird_encounter$EncounterID
 length(unique(f))
 list_birdID <- split(bird_encounter, f)
 bird_tracks_EncounterID <- split(bird_encounter, f)
+
+# I decided to save in a single table
 readr::write_csv(bird_encounter, "results/all_bird_positions.csv")
 #list bird puede ser esa pero 
 
+# Same function than in script 2, without the plots and reprojections and without the append! Saving in a separate file per encounter
 parse_results <- function(i) {
   ssvid_oi <- encounters$ssvid[i]
   date_oi <- encounters$date[i]
@@ -32,16 +40,16 @@ parse_results <- function(i) {
 readr::write_csv(vessel_positions, 
                    glue::glue("results/Encounter{i}_vessel_tracks_encounter.csv"))
 }
-options(future.globals.maxSize)
+###  Run the function
 
 options(future.globals.maxSize = 90 * 1024 ^ 3) # for 50 Gb RAM
 library(furrr)
 plan(multisession, workers = 20)
 plan("default")
 
-furrr::future_map(seq_along(1:nrow(encounters)),
+all_vessel_positions <- furrr::future_map(seq_along(1:nrow(encounters)),
                   ~parse_results(.x))
-all_vessel_positions <- .Last.value 
+#name the list to bind rows 
 names(all_vessel_positions) <- paste("Encounter",1:7399)
 vessel_positions_one_csv <- bind_rows(all_vessel_positions)
 readr::write_csv(vessel_positions_one_csv, "results/all_vessel_positions.csv")

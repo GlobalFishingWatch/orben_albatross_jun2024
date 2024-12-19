@@ -14,9 +14,12 @@ encounters <- 'scratch_david.bird_encounters'
 encounters <- bq_table_download(paste(project_id, encounters, sep = "."))
 encounters <- encounters %>% 
   arrange(date, BirdID, ssvid) %>% 
-  mutate(EncounterID = row_number()) %>% 
+#Encounter ID will be the common variable
+    mutate(EncounterID = row_number()) %>% 
   relocate(EncounterID)
-readr::write_csv(encounters, "results/encounter_info.csv")
+
+readr::write_csv(encounters, "results/encounter_info.csv") #I sent this
+
 # Filter for all ssvid and dates 
 ## each ssvid
 
@@ -26,15 +29,16 @@ orben_sf <- orben_tracks %>%
   st_as_sf(coords = c("lon", "lat")) %>% 
   st_set_crs(4326)
 vessel_proj <- orben_sf %>% 
-  st_transform(3172)
+  st_transform(3172) #to plot and to have a buffer in km!
 tracks_sf <- tracks_sf %>% 
   mutate(date = lubridate::date(datetime))
 track_proj <- tracks_sf %>% 
   st_transform(3172)
 
-## second ssvid
+
 #all_encounters <- list()
 
+# A function to parse the results and plot for each encounter
 
 parse_results <- function(i) {
   ssvid_oi <- encounters$ssvid[i]
@@ -54,11 +58,13 @@ encounter_bird_track <- track_proj %>%
   mutate(EncounterID = i) %>% 
   relocate(EncounterID)
 
+#I was writing each dataset and appending. 
+# appending is slow, don't do it.
 readr::write_csv(st_drop_geometry(encounter_bird_track), 
                   "results/bird_tracks_encounter.csv", append = T)
 readr::write_csv(st_drop_geometry(vessel_positions), 
                   "results/vessel_tracks_encounter.csv", append = T)
-
+# the buffer 30km 
 buf <- st_buffer(encounter_bird_track, dist = 30000)
 
 vessel_positions %>%
@@ -79,3 +85,4 @@ ggsave(glue::glue("figs/encounter_{i}.png"), width = 8, height = 5)
 #plan(multisession, workers = 20)
 #furrr::future_map(seq_along(1:nrow(encounters)),
 #~parse_results(.x))
+#too slow
