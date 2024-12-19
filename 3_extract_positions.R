@@ -53,24 +53,30 @@ all_vessel_positions <- furrr::future_map(seq_along(1:nrow(encounters)),
 names(all_vessel_positions) <- paste("Encounter",1:7399)
 vessel_positions_one_csv <- bind_rows(all_vessel_positions)
 readr::write_csv(vessel_positions_one_csv, "results/all_vessel_positions.csv")
+# save directly in one csv
+vessel_positions_one_csv %>% select(-nnet_score) %>% readr::write_csv("all_vessel_positions.csv")
+#upload to bigquery never worked because I was trying to do it by encounter and then by day it didn´t work. next step: do it partitioning by month?
 
-#upload to bigquery
+#project_id <-  "world-fishing-827"
+#dataset_id <- "scratch_andrea_ttl100"
+# bigrquery::bq_table_upload(x = bigrquery::bq_table(project = project_id,
+#                                                    dataset = dataset_id,
+#                                                    table = 'orben_vessel_per_encounter'),
+#                            values = vessel_positions_one_csv,
+#                           configuration = list(
+#                              query = list(
+#                                integer_partitioning = 
+#                                  list(field = "EncounterID",
+#                                       type = "INTEGER")))) 
+#should have been by day or month
 project_id <-  "world-fishing-827"
 dataset_id <- "scratch_andrea_ttl100"
 bigrquery::bq_table_upload(x = bigrquery::bq_table(project = project_id,
                                                    dataset = dataset_id,
                                                    table = 'orben_vessel_per_encounter'),
                            values = vessel_positions_one_csv,
-                           configuration = list(
-                             query = list(
-                               integer_partitioning = 
-                                 list(field = "EncounterID",
-                                      type = "INTEGER")))) 
-
-
-
-f = vessel_positions_one_csv$EncounterID
-length(unique(f))
-
-all_bird_positions
-vessel_positions_one_csv %>% select(-nnet_score) %>% readr::write_csv("all_vessel_positions.csv")
+                          configuration = list(
+                            query = list(
+                              time_partitioning = 
+                                list(field = "date",
+                                     type = "DAY"))))
