@@ -34,12 +34,18 @@ count(tracks, species)
 shape_wkt <- tracks_sf %>%
   dplyr::mutate(wkt = st_as_text(geometry)) %>%
   sf::st_drop_geometry(.)
+shape_wkt$wkt
 distinct(shape_wkt, species, BirdID, start, end) %>% arrange(BirdID)
 bigrquery::bq_auth()
 2
 project_id <-  "world-fishing-827"
 dataset_id <- "scratch_andrea_ttl100"
+
+# won´t upload the one with shape_wkt
 bigrquery::bq_table_upload(x = bigrquery::bq_table(project = project_id,
                                                    dataset = dataset_id,
-                                                   table = 'orben_tracks_Nov'),
-                           values = shape_wkt) 
+                                                   table = 'orben_tracks_Nov_no_wkt'),
+                           values = tracks) 
+
+# how many dates
+unique(lubridate::date(tracks$datetime))
