@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+results/Encounter*
+results/*
+figs/
