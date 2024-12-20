@@ -48,4 +48,4 @@ bigrquery::bq_table_upload(x = bigrquery::bq_table(project = project_id,
                            values = tracks) #this is the original table
 
 # how many dates
-unique(lubridate::date(tracks$datetime))
+dates_original <- unique(lubridate::date(tracks$datetime))
