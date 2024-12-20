@@ -26,26 +26,26 @@ tracks %>% select(start, datetime, end)
 #-----
 
 #upload data ----
-tracks_sf <- sf::st_as_sf(tracks, coords = c("lon", "lat"))
-tracks_sf <- tracks_sf %>% st_set_crs(4326)
-count(tracks, study)
-count(tracks, species)
+#tracks_sf <- sf::st_as_sf(tracks, coords = c("lon", "lat"))
+#tracks_sf <- tracks_sf %>% st_set_crs(4326)
+#count(tracks, study)
+#count(tracks, species)
 #-----save and upload to bigquery
-shape_wkt <- tracks_sf %>%
-  dplyr::mutate(wkt = st_as_text(geometry)) %>%
-  sf::st_drop_geometry(.)
-shape_wkt$wkt
-distinct(shape_wkt, species, BirdID, start, end) %>% arrange(BirdID)
+#shape_wkt <- tracks_sf %>%
+#  dplyr::mutate(wkt = st_as_text(geometry)) %>%
+#  sf::st_drop_geometry(.)
+#shape_wkt$wkt
+#distinct(shape_wkt, species, BirdID, start, end) %>% arrange(BirdID)
 bigrquery::bq_auth()
 2
 project_id <-  "world-fishing-827"
 dataset_id <- "scratch_andrea_ttl100"
 
-# won´t upload the one with shape_wkt
+# upload the original track file, won't upload the one with shape_wkt
 bigrquery::bq_table_upload(x = bigrquery::bq_table(project = project_id,
                                                    dataset = dataset_id,
                                                    table = 'orben_tracks_Nov_no_wkt'),
-                           values = tracks) 
+                           values = tracks) #this is the original table
 
 # how many dates
 unique(lubridate::date(tracks$datetime))

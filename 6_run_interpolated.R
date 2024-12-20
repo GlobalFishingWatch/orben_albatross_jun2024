@@ -21,7 +21,7 @@ create_table <-  function(.x) {
   # create the query
   query <- glue::glue(interpolated)
   # name the table to create a partitioned table by date
-  table_name <- paste0(project_id, ".", dataset, ".orben_interpolate$",format.Date(.x, "%Y%m%d"))
+  table_name <- paste0(project_id, ".", dataset, ".orben_albatross_interpolate$",format.Date(.x, "%Y%m%d"))
   # do the query
   bq_project_query(project_id,
                    query = query,
@@ -35,6 +35,8 @@ create_table <-  function(.x) {
   )
 }
 #create_table("2024-01-16")#test for one day creating a table interpolate_test
+#two datasets in BQ, interpolate (larger) and albatross_intepolate, (smaller).
+# will share with Rachael from the first and redo the loop in January
 
 # execute the query in parallel across the list of dates
 library(furrr)
@@ -60,8 +62,7 @@ create_table <-  function(.x) {
                    configuration = list(
                      query = list(
                        time_partitioning = 
-                         list(#field = "time",#error with field but partition ok
-                           type = "DAY"))
+                         list(type = "DAY"))
                    )
   )
 }

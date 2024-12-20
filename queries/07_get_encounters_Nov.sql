@@ -4,7 +4,7 @@ WITH boats AS
 ssvid,
 ST_GEOGPOINT(lon_center,lat_center) AS pos_ais,
 time 
-FROM `scratch_david.ais_interpolate`),
+FROM `scratch_andrea_ttl100.orben_AIS_interpolate`),
 
 birds AS 
 
@@ -13,7 +13,7 @@ species,
 BirdID,
 ST_GEOGPOINT(lon_center,lat_center) AS pos_bird,
 time 
-FROM `scratch_david.albatross_interpolate`),
+FROM `scratch_andrea_ttl100.orben_interpolate`),
 
 
 positions_compared AS 
